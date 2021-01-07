@@ -10,23 +10,26 @@ from django.utils.translation import ugettext_lazy as _
 
 
 partial_date_re = re.compile(
-    r"^(?P<year>\d{4})(?:-(?P<month>\d{1,2}))?(?:-(?P<day>\d{1,2}))?$"
+    r"^(?P<year>\d+)(?:-(?P<month>\d{1,2}))?(?:-(?P<day>\d{1,2}))?$"
 )
+partial_date_re_circa = re.compile( r"^(circa|c\.?)\s*(?P<year>\d+)$", re.IGNORECASE )
 
 
 class PartialDate(object):
     YEAR = 0
     MONTH = 1
     DAY = 2
+    # It might be better if the CIRCA flag was 0 
+    # but this only works as a drop in for code already using PartialDate 
+    # if it doesn't disturb the values that are already set
+    CIRCA = 3
 
     _date = None
     _precision = None
 
-    DATE_FORMATS = {YEAR: "%Y", MONTH: "%Y-%m", DAY: "%Y-%m-%d"}
-
     def __init__(self, date, precision=DAY):
         if isinstance(date, six.text_type):
-            date, precision = PartialDate.parseDate(date)
+            date, precision = PartialDate.parse_date(date)
 
         self.date = date
         self.precision = precision
@@ -35,14 +38,16 @@ class PartialDate(object):
         return (
             ""
             if not self._date
-            else self._date.strftime(self.DATE_FORMATS[self._precision])
+            else self.format()
         )
 
-    def format(self, precision_year=None, precision_month=None, precision_day=None):
-        if self.precisionYear():
+    def format(self, precision_year="%Y", precision_month="%Y-%m", precision_day="%Y-%m-%d", precision_circa="c. %Y"):
+        if self.is_precision_year():
             format = precision_year
-        elif self.precisionMonth():
+        elif self.is_precision_month():
             format = precision_month
+        elif self.is_precision_circa():
+            format = precision_circa
         else:
             format = precision_day
         return "" if not self._date else self._date.strftime(format)
@@ -66,27 +71,41 @@ class PartialDate(object):
     @precision.setter
     def precision(self, value):
         self._precision = (
-            value if value in (self.YEAR, self.MONTH, self.DAY) else self.DAY
+            value if value in (self.YEAR, self.MONTH, self.DAY, self.CIRCA) else self.DAY
         )
         if self._precision == self.MONTH:
             self._date.replace(day=1)
-        if self._precision == self.YEAR:
+        elif self._precision == self.YEAR or self._precision == self.CIRCA:
             self._date.replace(month=1, day=1)
 
-    def precisionYear(self):
+    def is_precision_year(self):
         return self.precision == self.YEAR
 
-    def precisionMonth(self):
+    def is_precision_month(self):
         return self.precision == self.MONTH
 
-    def precisionDay(self):
+    def is_precision_day(self):
         return self.precision == self.DAY
 
+    def is_precision_circa(self):
+        return self.precision == self.CIRCA
+
     @staticmethod
-    def parseDate(value):
+    def parse_date(value):
         """
-        Returns a tuple (datetime.date, precision) from a string formatted as YYYY, YYYY-MM, YYYY-MM-DD.
+        Returns a tuple (datetime.date, precision) from a string formatted as YYYY, YYYY-MM, YYYY-MM-DD, c. YYYY, circa YYYY.
         """
+        # Test if circa
+        match = partial_date_re_circa.match(value)
+        if match:
+            match_dict = match.groupdict()
+            date = datetime.date(
+                year=int(match_dict['year']),
+                month=1,
+                day=1,
+            )
+            return (date, PartialDate.CIRCA)
+
         match = partial_date_re.match(value)
 
         try:
@@ -100,10 +119,11 @@ class PartialDate(object):
                 if match_dict["month"]
                 else PartialDate.YEAR
             )
+            
             return (datetime.date(**kw), precision)
         except (AttributeError, ValueError):
             raise exceptions.ValidationError(
-                _("'%(value)s' is not a valid date string (YYYY, YYYY-MM, YYYY-MM-DD)"),
+                _("'%(value)s' is not a valid date string (YYYY, YYYY-MM, YYYY-MM-DD, c. YYYY, circa YYYY)"),
                 params={"value": value},
             )
 

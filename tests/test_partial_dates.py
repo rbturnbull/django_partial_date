@@ -13,10 +13,17 @@ class PartialDateTestCase(TestCase):
         self.assertEqual(
             PartialDate("2000-03-04").date, date(year=2000, month=3, day=4)
         )
+        self.assertEqual(PartialDate("Circa 2000").date, date(year=2000, month=1, day=1))
+        self.assertEqual(PartialDate("c. 1066").date, date(year=1066, month=1, day=1))
+        self.assertEqual(PartialDate("c. 633").date, date(year=633, month=1, day=1))
+
 
         self.assertEqual(PartialDate("2000").precision, PartialDate.YEAR)
         self.assertEqual(PartialDate("2000-02").precision, PartialDate.MONTH)
         self.assertEqual(PartialDate("2000-03-04").precision, PartialDate.DAY)
+        self.assertEqual(PartialDate("c. 2000").precision, PartialDate.CIRCA)
+        self.assertEqual(PartialDate("circa 2000").precision, PartialDate.CIRCA)
+        self.assertEqual(PartialDate("circa 633").precision, PartialDate.CIRCA)
 
     def test_init_with_date(self):
         self.assertEqual(
@@ -36,6 +43,18 @@ class PartialDateTestCase(TestCase):
                 date(year=2000, month=3, day=4), precision=PartialDate.YEAR
             ).__repr__(),
             "2000",
+        )
+        self.assertEqual(
+            PartialDate(
+                date(year=1066, month=3, day=4), precision=PartialDate.CIRCA
+            ).__repr__(),
+            "c. 1066",
+        )
+        self.assertEqual(
+            PartialDate(
+                date(year=633, month=3, day=4), precision=PartialDate.CIRCA
+            ).__repr__(),
+            "c. 0633",
         )
 
     def test_eq(self):
