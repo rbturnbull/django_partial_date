@@ -11,7 +11,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 setup(
     name="django_partial_date",
     version="1.3.1",
-    description="Django custom model field for partial dates with the form YYYY, YYYY-MM, YYYY-MM-DD",
+    description="Django custom model field for partial dates with the form YYYY, YYYY-MM, YYYY-MM-DD, c. YYYY, circa YYYY",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ktowen/django_partial_date",

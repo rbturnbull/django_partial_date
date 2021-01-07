@@ -1,7 +1,7 @@
 django_partial_date
 ================
 
-Django custom model field for partial dates with the form YYYY, YYYY-MM, YYYY-MM-DD
+Django custom model field for partial dates with the form YYYY, YYYY-MM, YYYY-MM-DD, c. YYYY, circa YYYY
 
  * Works with DRF
  * Supports comparison operations
