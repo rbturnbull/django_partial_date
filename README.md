@@ -13,7 +13,7 @@ Usage
 install the package
 
 ```bash
-pip install django_partial_date
+pip install git+https://github.com/rbturnbull/django_partial_date.git
 ```
 
 
@@ -94,9 +94,13 @@ datetime.date(2015, 11, 1)
 2015
 >>> partial_date_instance.format('%Y', '%m/%Y', '%m/%d/%Y')
 '2015'
+>>> partial_date_instance = PartialDate("c. 1066")
+>>> partial_date_instance
+c. 1066
 ```
 
 Thanks for their collaborations to
 - lorinkoz
 - howieweiner
 - jghyllebert
+- rbturnbull
