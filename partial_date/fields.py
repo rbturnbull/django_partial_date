@@ -145,6 +145,10 @@ class PartialDate(object):
         else:
             return NotImplemented
 
+    def __hash__(self):
+        return hash(str(self))
+
+
 
 class PartialDateField(models.Field):
     """
